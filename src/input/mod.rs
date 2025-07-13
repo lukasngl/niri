@@ -413,6 +413,7 @@ impl State {
                     &this.niri.screenshot_ui,
                     this.niri.config.borrow().input.disable_power_key_handling,
                     is_inhibiting_shortcuts,
+                    this.niri.layout.is_overview_open(),
                 );
 
                 if matches!(res, FilterResult::Forward) {
@@ -2778,6 +2779,7 @@ impl State {
                             cooldown: None,
                             allow_when_locked: false,
                             allow_inhibiting: false,
+                            overview_only: false,
                             hotkey_overlay_title: None,
                         });
                         let bind_right = Some(Bind {
@@ -2790,6 +2792,7 @@ impl State {
                             cooldown: None,
                             allow_when_locked: false,
                             allow_inhibiting: false,
+                            overview_only: false,
                             hotkey_overlay_title: None,
                         });
                         (bind_left, bind_right)
@@ -2834,6 +2837,7 @@ impl State {
                             cooldown: Some(Duration::from_millis(50)),
                             allow_when_locked: false,
                             allow_inhibiting: false,
+                            overview_only: false,
                             hotkey_overlay_title: None,
                         });
                         let bind_down = Some(Bind {
@@ -2846,6 +2850,7 @@ impl State {
                             cooldown: Some(Duration::from_millis(50)),
                             allow_when_locked: false,
                             allow_inhibiting: false,
+                            overview_only: false,
                             hotkey_overlay_title: None,
                         });
                         (bind_up, bind_down)
@@ -2860,6 +2865,7 @@ impl State {
                             cooldown: Some(Duration::from_millis(50)),
                             allow_when_locked: false,
                             allow_inhibiting: false,
+                            overview_only: false,
                             hotkey_overlay_title: None,
                         });
                         let bind_down = Some(Bind {
@@ -2872,6 +2878,7 @@ impl State {
                             cooldown: Some(Duration::from_millis(50)),
                             allow_when_locked: false,
                             allow_inhibiting: false,
+                            overview_only: false,
                             hotkey_overlay_title: None,
                         });
                         (bind_up, bind_down)
@@ -3900,6 +3907,7 @@ fn should_intercept_key(
     screenshot_ui: &ScreenshotUi,
     disable_power_key_handling: bool,
     is_inhibiting_shortcuts: bool,
+    overview_open: bool,
 ) -> FilterResult<Option<Bind>> {
     // Actions are only triggered on presses, release of the key
     // shouldn't try to intercept anything unless we have marked
@@ -3945,6 +3953,7 @@ fn should_intercept_key(
                     // inhibited.
                     allow_inhibiting: false,
                     hotkey_overlay_title: None,
+                    overview_only: false,
                 });
             }
         }
@@ -3953,6 +3962,8 @@ fn should_intercept_key(
     match (final_bind, pressed) {
         (Some(bind), true) => {
             if is_inhibiting_shortcuts && bind.allow_inhibiting {
+                FilterResult::Forward
+            } else if bind.overview_only && !overview_open {
                 FilterResult::Forward
             } else {
                 suppressed_keys.insert(key_code);
@@ -4011,6 +4022,7 @@ fn find_bind(
             // Hardcoded binds must never be inhibited.
             allow_inhibiting: false,
             hotkey_overlay_title: None,
+            overview_only: false,
         });
     }
 
@@ -4245,6 +4257,7 @@ fn hardcoded_overview_bind(raw: Keysym, mods: ModifiersState) -> Option<Bind> {
         cooldown: None,
         allow_when_locked: false,
         allow_inhibiting: false,
+        overview_only: false,
         hotkey_overlay_title: None,
     })
 }
@@ -4822,6 +4835,7 @@ mod tests {
                 cooldown: None,
                 allow_when_locked: false,
                 allow_inhibiting: true,
+                overview_only: false,
                 hotkey_overlay_title: None,
             },
             Bind {
@@ -4834,6 +4848,7 @@ mod tests {
                 cooldown: None,
                 allow_when_locked: false,
                 allow_inhibiting: true,
+                overview_only: false,
                 hotkey_overlay_title: None,
             },
         ]);
